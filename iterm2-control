@@ -1,6 +1,13 @@
 #!/bin/bash
+#
+# Copyright (c) 2018 Niklas Fondberg <niklas.fondberg@gmail.com. All rights reserved.
+# Latest release: https://github.com/fondberg/iterm2-control
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+#
+#
 # Installation:
-# Adapted for some more control by Niklas Fondberg niklas.fondberg@gmail.com
 # 1. Save this script to /some/bin/itermControl
 # 2. chmod 755 /some/bin/itermControl
 # 3. Configure your defaults in the defaults section
@@ -66,8 +73,7 @@ usage() {
   echo "-f, --foreground        Hex color of foreground in the format of FFFFFF"
   echo "-b, --background        Hex color of background in the format of FFFFFF"
   echo "-o  --opacity           Opcacity of the terminal 0.0 - 1.0"
-  echo "NOTE: if any of the options f,b or o are set and some are omitted default values for the omitted are used"
-  echo "-c, --tabcolor          Color of tab title in the format of a text color (red, blue, green, white, et.c"
+  echo "-c, --tabcolor          Color of tab title in the format of a text color (red, blue, green, white, et.c)"
   echo "-t, --title             Title text of the terminal"
   echo "-d, --default           Use default values and set everything"
   exit 0
@@ -133,6 +139,9 @@ while [[ $# > 0 ]]
         setTerminalText $TXT
         setTabColor $TAB
         shift # past argument
+        ;;
+      -h|--help)
+        usage
         ;;
       *)
         echo "Unknown option $2"
