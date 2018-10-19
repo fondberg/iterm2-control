@@ -1,0 +1,150 @@
+#!/bin/bash
+# Installation:
+# Adapted for some more control by Niklas Fondberg niklas.fondberg@gmail.com
+# 1. Save this script to /some/bin/itermControl
+# 2. chmod 755 /some/bin/itermControl
+# 3. Configure your defaults in the defaults section
+
+#DEFAULTS
+FG="ffeeff"
+BG="003300"
+OP="0.1"
+TAB="green"
+TXT="Special term"
+SETCOLOR=0
+
+
+sendOSA_AppCmd() {
+  if [ -z "$1" ]; then
+    echo "sendOSA_AppCmd cmd string is not empty"
+    exit 1
+  fi
+  echo $1
+
+/usr/bin/osascript <<EOF
+tell application "iTerm2"
+  tell current session of current window
+    $1
+    # set foreground color to {65535, 65535, 65535, 0}
+    # set background color to {0, 0, 0, 0}
+    # set transparency to "0.1"
+  end tell
+end tell
+EOF
+}
+
+get_osa_color() {
+  local COLOR=$1
+
+  local R=`echo $COLOR | sed 's/../0x&,/g' | awk -F "," '{printf("%d",$1 * 257)}'`
+  local G=`echo $COLOR | sed 's/../0x&,/g' | awk -F "," '{printf("%d",$2 * 257)}'`
+  local B=`echo $COLOR | sed 's/../0x&,/g' | awk -F "," '{printf("%d",$3 * 257)}'`
+  echo "{${R}, ${G}, ${B}, 0}"
+}
+
+setTerminalText () {
+  if [ ! -z "$1" ]; then
+    TXT=$1
+  fi
+  unset PROMPT_COMMAND
+  echo -ne "\033]0;"$TXT"\007"
+  echo "Changing tab title to $TXT"
+  #export PROMPT_COMMAND='echo -ne "\033]0;${TXT}\007"'
+}
+
+setTabColor() {
+  if [ ! -z "$1" ]; then
+    TAB=$1
+  fi
+  echo "Changing tab color to $TAB"
+  echo -ne "\033]6;1;bg;${TAB};brightness;255\a"
+}
+
+usage() {
+  echo "Usage: itermControl [options...]"
+  echo "Options: "
+  echo "-f, --foreground        Hex color of foreground in the format of FFFFFF"
+  echo "-b, --background        Hex color of background in the format of FFFFFF"
+  echo "-o  --opacity           Opcacity of the terminal 0.0 - 1.0"
+  echo "NOTE: if any of the options f,b or o are set and some are omitted default values for the omitted are used"
+  echo "-c, --tabcolor          Color of tab title in the format of a text color (red, blue, green, white, et.c"
+  echo "-t, --title             Title text of the terminal"
+  echo "-d, --default           Use default values and set everything"
+  exit 0
+}
+
+
+if [ -z "$1" ]; then
+  usage
+fi
+
+
+setFgColor() {
+  local COLOR=$1
+  if [ -z "$COLOR" ]; then
+    COLOR=$FG
+  fi
+  FG=`get_osa_color $COLOR`
+  sendOSA_AppCmd "set foreground color to ${FG}"
+}
+
+setBgColor() {
+  local COLOR=$1
+  if [ -z "$COLOR" ]; then
+    COLOR=$BG
+  fi
+  BG=`get_osa_color $COLOR`
+  sendOSA_AppCmd "set background color to ${BG}"
+}
+
+
+OPACITY=""
+
+while [[ $# > 0 ]]
+  do
+  key="$1"
+  case $key in
+      -f|--foreground)
+        setFgColor $2
+        shift # past argument
+        ;;
+      -b|--background)
+        setBgColor $2
+        shift # past argument
+        ;;
+      -o|--opacity)
+        OPACITY=$2
+        shift # past argument
+        ;;
+      -c|--tabcolor)
+        TAB="$2"
+        setTabColor $TAB
+        shift # past argument
+        ;;
+      -t|--title)
+        TXT="$2"
+        setTerminalText $TXT
+        shift # past argument
+        ;;
+     -d|--default)
+        setFgColor
+        setBgColor
+        sendOSA_AppCmd "set transparency to ${OP}"
+        setTerminalText $TXT
+        setTabColor $TAB
+        shift # past argument
+        ;;
+      *)
+        echo "Unknown option $2"
+        usage
+        # unknown option
+      ;;
+  esac
+  shift # past argument or value
+done
+
+if [ ! -z "$OPACITY" ]; then
+    sendOSA_AppCmd "set transparency to ${OPACITY}"
+fi
+
+exit 0
