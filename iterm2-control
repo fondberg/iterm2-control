@@ -12,6 +12,10 @@
 # 2. chmod 755 /some/bin/itermControl
 # 3. Configure your defaults in the defaults section
 
+# iterm2 documentation on scripting:
+# https://www.iterm2.com/documentation-scripting.html
+# https://www.iterm2.com/documentation-escape-codes.html
+
 #DEFAULTS
 FG="ffeeff"
 BG="003300"
